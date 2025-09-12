@@ -1,0 +1,94 @@
+version: "3.9"
+
+x-env: &common-env
+  DATABASE_URL: ${DATABASE_URL}
+  REDIS_URL: ${REDIS_URL}
+  NEXTAUTH_URL: https://talesofcharlie.com
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+  AUTH_EMAIL_SERVER: ${AUTH_EMAIL_SERVER}
+  AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@talesofcharlie.com}"
+  AI_MODE: real
+  LLM_PROVIDER: openai
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  MAX_DAILY_COST_USD: "5"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: toc
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d toc"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    command: ["redis-server","--appendonly","yes","--appendfsync","everysec"]
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: ./apps/web/Dockerfile
+      target: prod
+    environment:
+      <<: *common-env
+      NEXT_PUBLIC_API_BASE: https://talesofcharlie.com/api
+    expose: ["3000"]
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: ./apps/api/Dockerfile
+      target: prod
+    environment: *common-env
+    expose: ["4000"]
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ..
+      dockerfile: ./apps/worker/Dockerfile
+      target: prod
+    environment: *common-env
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  # (Optional) LiteLLM proxy container can be added here when you wire prod LLM.
+  # litellm:
+  #   image: ghcr.io/berriai/litellm:latest
+  #   environment:
+  #     OPENAI_API_KEY: ${OPENAI_API_KEY}
+  #   expose: ["8080"]
+  #   restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports: ["80:80","443:443"]
+    volumes:
+      - ./Caddyfile.dev.prod:/etc/caddy/Caddyfile.dev:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  emailVerified  DateTime?
+  googleId       String?
+  username       String   @unique
+  avatarUrl      String?
+  createdAt      DateTime @default(now())
+  posts          Post[]
+  stars          Star[]
+}
+
+model Post {
+  id                      String   @id @default(cuid())
+  url                     String   @unique
+  domain                  String
+  headlineExact           String
+  ledeExact               String
+  summaryConservativeMd   String
+  tags                    String[]
+  status                  PostStatus @default(PUBLISHED)
+  createdAt               DateTime @default(now())
+  createdBy               String
+  starCountCached         Int       @default(0)
+  @@index([domain])
+}
+
+enum PostStatus {
+  PUBLISHED
+  DENIED
+  PENDING
+}
+
+model Star {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  @@unique([userId, postId])
+}
+
+model WhitelistDomain {
+  domain   String   @id
+  addedAt  DateTime @default(now())
+  addedBy  String?
+}
+
+model BlacklistDomain {
+  domain   String   @id
+  reason   String?
+  addedAt  DateTime @default(now())
+  addedBy  String?
+}
+
+model DomainReview {
+  id                         String   @id @default(cuid())
+  domain                     String
+  status                     ReviewStatus @default(PENDING)
+  monthlyVisitorsReported    Int?
+  evidenceUrl                String?
+  legitimacyAssessment       String?
+  decidedBy                  String?
+  decidedAt                  DateTime?
+  createdAt                  DateTime @default(now())
+  @@index([domain])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  DENIED
+}

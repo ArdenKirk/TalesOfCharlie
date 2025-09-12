@@ -1,0 +1,10 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint","import"],
+  "extends": ["eslint:recommended","plugin:@typescript-eslint/recommended","prettier"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "import/order": ["warn", { "alphabetize": { "order": "asc" }, "newlines-between": "always" }]
+  }
+}
