@@ -1,0 +1,67 @@
+name: CLA Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  cla:
+    name: Verify contributor agreement
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR body for checked CLA box
+        id: prbox
+        run: |
+          # Save PR body to file
+          cat <<'BODY' > pr_body.txt
+          ${{ github.event.pull_request.body }}
+          BODY
+
+          if grep -Eiq '^\s*-\s*\[x\].*CLA v?1\.0' pr_body.txt; then
+            echo "prbox_ok=true" >> $GITHUB_OUTPUT
+          else
+            echo "prbox_ok=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout PR branch (full history)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Check commit trailers for CLA-Agreement
+        id: trailers
+        run: |
+          BASE_REF="${{ github.base_ref }}"
+          if [ -z "$BASE_REF" ]; then
+            # Fallback: compare to origin/main if base_ref missing
+            BASE_REF="origin/${GITHUB_BASE_REF:-main}"
+          fi
+
+          # Ensure base is fetched
+          git fetch origin "$BASE_REF" || true
+
+          # Examine commits in the PR range for the trailer line
+          if git log --format=%B "${BASE_REF}..HEAD" | grep -Eiq '^CLA-Agreement:\s*I agree to .*CLA v?1\.0'; then
+            echo "trailers_ok=true" >> $GITHUB_OUTPUT
+          else
+            echo "trailers_ok=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Decide
+        run: |
+          if [ "${{ steps.prbox.outputs.prbox_ok }}" = "true" ] || [ "${{ steps.trailers.outputs.trailers_ok }}" = "true" ]; then
+            echo "CLA check passed ✅" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          echo "### ❌ CLA check failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please either:" >> $GITHUB_STEP_SUMMARY
+          echo "1) Tick the CLA checkbox in the PR body (see template), **or**" >> $GITHUB_STEP_SUMMARY
+          echo "2) Add this trailer to any commit in this PR:" >> $GITHUB_STEP_SUMMARY
+          echo "\`CLA-Agreement: I agree to Tales of Charlie CLA v1.0 (see /CLA.md)\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Re-run the checks after updating." >> $GITHUB_STEP_SUMMARY
+          exit 1
