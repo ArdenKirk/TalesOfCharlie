@@ -5,6 +5,7 @@ x-env: &common-env
   REDIS_URL: redis://redis:6379
   NEXTAUTH_URL: http://localhost
   NEXTAUTH_SECRET: dev-secret
+  JWT_SECRET: dev-jwt-secret-super-secure-key-for-development
   AUTH_EMAIL_SERVER: smtp://mailhog:1025
   AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@localhost>"
   AI_MODE: mock
