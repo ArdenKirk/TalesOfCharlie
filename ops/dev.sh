@@ -36,9 +36,15 @@ case "${1:-up}" in
     info "Booting infra (Postgres, Redis, MailHog) ..."
     compose up -d postgres redis mailhog
 
-    info "Ensuring Prisma client + migrations + seed ..."
+    info "Ensuring Prisma client + migrations + seed (non-interactive) ..."
+    # CHANGE 1: add -y to pnpm install to auto-confirm
+    # CHANGE 2: give prisma migrate dev a default name so it never prompts
     compose run --rm api sh -lc \
-      "pnpm install --frozen-lockfile=false && pnpm -w db:generate && pnpm -w db:migrate && pnpm -w db:seed"
+      "CI=1 pnpm install --force --frozen-lockfile=false \
+       && pnpm -F @toc/db prisma generate \
+       && pnpm -F @toc/db prisma migrate dev --name initial_schema \
+       && pnpm -w db:seed"
+
 
     info "Starting app stack (web, api, worker, caddy) ..."
     compose up -d --build web api worker caddy
@@ -70,7 +76,6 @@ EOF
   reset)
     bold "RESET (destructive): stopping and removing volumes ..."
     compose down -v || true
-    # Extra safety: attempt to remove named volumes if they linger
     for v in postgres_data redis_data web_node_modules api_node_modules worker_node_modules; do
       docker volume rm "${PROJECT}_${v}" >/dev/null 2>&1 || true
     done
@@ -92,8 +97,8 @@ EOF
     ;;
 
   migrate)
-    bold "Running prisma migrate dev ..."
-    compose run --rm api sh -lc "pnpm -w db:migrate"
+    bold "Running prisma migrate dev (non-interactive) ..."
+    compose run --rm api sh -lc "pnpm -F @toc/db prisma migrate dev --name initial_schema"
     ;;
 
   seed)

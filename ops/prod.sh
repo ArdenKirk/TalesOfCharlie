@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ===== Config =====
 COMPOSE_FILE="docker-compose.prod.yml"
 ENV_FILE=".env.prod"
 PROJECT="talesofcharlie"
@@ -13,24 +12,16 @@ cd "$(dirname "$0")"
 bold() { printf "\033[1m%s\033[0m\n" "$*"; }
 info() { printf "👉 %s\n" "$*"; }
 ok()   { printf "✅ %s\n" "$*"; }
-warn() { printf "⚠️  %s\n" "$*"; }
 err()  { printf "🛑 %s\n" "$*" >&2; }
 
-require_env() {
-  if [ ! -f "$ENV_FILE" ]; then
-    err "Missing $ENV_FILE. Create it with required secrets (see example below)."
-    exit 1
-  fi
-}
-
-compose() { docker compose -f "$COMPOSE_FILE" -p "$PROJECT" --env-file "$ENV_FILE" "$@" ; }
+require_env() { [ -f "$ENV_FILE" ] || { err "Missing $ENV_FILE"; exit 1; }; }
+compose() { docker compose -f "$COMPOSE_FILE" -p "$PROJECT" --env-file "$ENV_FILE" "$@"; }
 
 wait_for_health() {
   local url="$1" tries=120
   info "Waiting for health at $url ..."
   until curl -fsS "$url" >/dev/null 2>&1; do
-    tries=$((tries-1))
-    if [ $tries -le 0 ]; then err "Timed out waiting for $url"; exit 1; fi
+    tries=$((tries-1)); [ $tries -le 0 ] && { err "Timed out waiting for $url"; exit 1; }
     sleep 2
   done
   ok "Service healthy: $url"
@@ -39,7 +30,7 @@ wait_for_health() {
 case "${1:-up}" in
   up|deploy)
     require_env
-    bold "Tales of Charlie — Prod Deploy"
+    bold "Tales of Charlie — Prod Deploy (non-interactive)"
 
     info "Booting infra (Postgres, Redis) ..."
     compose up -d postgres redis
@@ -58,54 +49,20 @@ $(bold "Prod is up! 🚀")
   Site:       https://${DOMAIN}
   API health: $API_HEALTH
 
-Useful commands:
-  ./prod.sh logs        # tail logs
-  ./prod.sh ps          # service status
-  ./prod.sh sh api      # shell into a service
-  ./prod.sh down        # stop stack (keeps volumes)
-  ./prod.sh migrate     # re-run prisma migrate deploy
-  ./prod.sh seed        # (optional) seed once, if you really need initial data
+Useful:
+  ./prod.sh logs
+  ./prod.sh ps
+  ./prod.sh sh api
+  ./prod.sh down
+  ./prod.sh migrate
 EOF
     ;;
 
-  down)
-    require_env
-    bold "Stopping prod stack ..."
-    compose down
-    ok "Stopped."
-    ;;
-
-  logs)
-    require_env
-    compose logs -f web api worker postgres redis caddy
-    ;;
-
-  ps|status)
-    require_env
-    compose ps
-    ;;
-
-  migrate)
-    require_env
-    bold "Running prisma migrate deploy ..."
-    compose run --rm api sh -lc "pnpm -w db:deploy"
-    ;;
-
-  seed)
-    require_env
-    warn "Seeding in prod should be rare and controlled."
-    compose run --rm api sh -lc "pnpm -w db:seed"
-    ;;
-
-  sh)
-    require_env
-    svc="${2:-api}"
-    bold "Shell into ${svc} ..."
-    compose exec "$svc" sh
-    ;;
-
-  *)
-    err "Unknown command: ${1}. Try: up | down | logs | ps | migrate | seed | sh <svc>"
-    exit 1
-    ;;
+  down)    require_env; compose down; ok "Stopped."; ;;
+  logs)    require_env; compose logs -f web api worker postgres redis caddy ;;
+  ps|status) require_env; compose ps ;;
+  migrate) require_env; compose run --rm api sh -lc "pnpm -w db:deploy" ;;
+  seed)    require_env; compose run --rm api sh -lc "pnpm -w db:seed" ;; # use only if you really need it
+  sh)      require_env; svc="${2:-api}"; compose exec "$svc" sh ;;
+  *)       err "Unknown: ${1}. Try: up | down | logs | ps | sh <svc> | migrate | seed"; exit 1 ;;
 esac
