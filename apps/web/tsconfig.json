@@ -19,7 +19,12 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@toc/types": ["../../packages/types"],
+      "@toc/ai-mocks": ["../../packages/ai-mocks"],
+      "@toc/db": ["../../packages/db"],
+      "@toc/ui": ["../../packages/ui"],
+      "@toc/config": ["../../packages/config"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
