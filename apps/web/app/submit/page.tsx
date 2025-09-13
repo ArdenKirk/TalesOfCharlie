@@ -35,6 +35,18 @@ export default function SubmitArticle() {
     setMessage("")
 
     try {
+      // Check if we should use Response Picker for development
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const aiMode = process.env.AI_MODE || 'mock';
+
+      if (isDevelopment && aiMode === 'mock') {
+        // In development with mock AI, show Response Picker first
+        responsePicker.openPicker(url);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Normal production flow
       const response = await fetch("/api/posts/submit", {
         method: "POST",
         headers: {
@@ -183,10 +195,41 @@ export default function SubmitArticle() {
         <ResponsePicker
           isOpen={responsePicker.isOpen}
           onClose={responsePicker.closePicker}
-          onSelectResponse={(response) => {
-            console.log('Selected AI Response:', response);
-            // In real implementation, this would override the work processing
-            alert(`Selected response: ${response.decision} (${response.tags.join(', ')})`);
+          onSelectResponse={async (response) => {
+            try {
+              setIsSubmitting(true);
+              setMessage("");
+
+              const mockResponse = await fetch("/api/posts/submit/mock", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  url: responsePicker.lastArticleUrl,
+                  mockDecision: response.decision,
+                  mockSummaryMd: response.summaryMd,
+                  mockTags: response.tags,
+                }),
+              });
+
+              if (mockResponse.ok) {
+                const result = await mockResponse.json();
+                setMessage("Article processed with mock AI response! It has been published.");
+                setMessageType("success");
+                setUrl("");
+                router.push("/"); // Redirect to home after successful mock processing
+              } else {
+                const error = await mockResponse.json();
+                setMessage(error.error?.message || "Failed to process article with mock response");
+                setMessageType("error");
+              }
+            } catch (error) {
+              setMessage("Network error. Please check your connection and try again.");
+              setMessageType("error");
+            } finally {
+              setIsSubmitting(false);
+            }
           }}
           articleUrl={responsePicker.lastArticleUrl}
         />

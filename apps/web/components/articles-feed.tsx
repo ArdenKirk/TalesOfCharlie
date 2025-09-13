@@ -17,30 +17,39 @@ export function ArticlesFeed({ maxItems = 8 }: ArticlesFeedProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // Get current sort and tag from URL parameters
+  // Get current sort, tag, and popularity window from URL parameters
   const currentSort = searchParams.get('sort') || 'recent';
   const currentTag = searchParams.get('tag');
+  const currentWindow = searchParams.get('window') || 'day';
 
   useEffect(() => {
     fetchArticles();
-  }, [currentSort, currentTag, maxItems]);
+  }, [currentSort, currentTag, currentWindow, maxItems]);
 
   const fetchArticles = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Build query parameters
+      let apiUrl: string;
       const params = new URLSearchParams({
         limit: maxItems.toString(),
-        sort: currentSort,
       });
 
       if (currentTag) {
         params.append('tag', currentTag);
       }
 
-      const response = await fetch(`/api/posts?${params}`);
+      // Use popularity endpoint for popular sort
+      if (currentSort === 'popular') {
+        apiUrl = `/api/posts/popular/${currentWindow}?${params}`;
+      } else {
+        // Use regular posts endpoint for recent/stars
+        params.append('sort', currentSort);
+        apiUrl = `/api/posts?${params}`;
+      }
+
+      const response = await fetch(apiUrl);
       const data = await response.json();
 
       if (data.success) {

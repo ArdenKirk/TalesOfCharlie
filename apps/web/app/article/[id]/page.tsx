@@ -6,9 +6,9 @@ import { RelatedArticles } from '@/components/related-articles';
 import { AuthButton } from '@/components/auth-button';
 
 interface ArticlePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 async function getArticle(id: string) {
@@ -30,7 +30,8 @@ async function getArticle(id: string) {
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
-  const article = await getArticle(params.id);
+  const { id } = await params;
+  const article = await getArticle(id);
 
   if (!article) {
     return {
@@ -59,7 +60,8 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
-  const article = await getArticle(params.id);
+  const { id } = await params;
+  const article = await getArticle(id);
 
   if (!article) {
     notFound();
@@ -110,7 +112,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-8">
               {/* Related Articles */}
-              <RelatedArticles articleId={params.id} />
+              <RelatedArticles articleId={id} />
 
               {/* Back to Home */}
               <div className="bg-news-silver/10 rounded-lg p-6">

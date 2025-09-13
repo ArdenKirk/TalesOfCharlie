@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useState, Suspense } from "react";
 import { AuthButton } from "@/components/auth-button";
 import { ArticlesFeed } from "@/components/articles-feed";
 import { SortControls } from "@/components/sort-controls";
+import { DomainReviewModal } from "@/components/domain-review-modal";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
 
   const handleSubmitArticle = () => {
     if (status === "authenticated") {
@@ -17,6 +21,17 @@ export default function Home() {
     } else {
       router.push("/");
     }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleTagClick = (tag: string) => {
+    router.push(`/tag/${encodeURIComponent(tag.toLowerCase())}`);
   };
 
   return (
@@ -49,16 +64,20 @@ export default function Home() {
             {/* Right Side Actions */}
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center space-x-4">
-                <div className="relative">
+                <form onSubmit={handleSearch} className="relative">
                   <input
                     type="text"
                     placeholder="Search articles..."
-                    className="w-48 px-3 py-1.5 text-sm border border-news-silver rounded-md focus:outline-none focus:ring-2 focus:ring-news-navy focus:border-transparent"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-48 px-3 py-1.5 pr-8 text-sm border border-news-silver rounded-md focus:outline-none focus:ring-2 focus:ring-news-navy focus:border-transparent"
                   />
-                  <svg className="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-news-concrete" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
+                  <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="w-4 h-4 text-news-concrete hover:text-news-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </form>
               </div>
               <AuthButton />
             </div>
@@ -170,11 +189,15 @@ export default function Home() {
                   
                   {/* Sort Controls */}
                   <div className="mt-4 sm:mt-0">
-                    <SortControls />
+                    <Suspense fallback={<div className="h-8 bg-news-silver/30 rounded animate-pulse"></div>}>
+                      <SortControls />
+                    </Suspense>
                   </div>
                 </div>
               </div>
-              <ArticlesFeed maxItems={8} />
+                  <Suspense fallback={<div className="text-center py-12 text-news-steel">Loading articles...</div>}>
+                    <ArticlesFeed maxItems={8} />
+                  </Suspense>
             </div>
 
             {/* Right Sidebar */}
@@ -206,7 +229,11 @@ export default function Home() {
                 <h4 className="text-lg font-bold text-news-charcoal headline-serif mb-4">Explore by Topic</h4>
                 <div className="flex flex-wrap gap-2">
                   {["Media Bias", "Election Fraud", "Cultural Issues", "Conservative Victory", "Liberal Hypocrisy", "Political Corruption", "Free Speech", "边к Values"].map((tag) => (
-                    <span key={tag} className="px-3 py-1 bg-news-silver/20 text-news-steel text-sm rounded-full hover:bg-news-navy hover:text-white transition-colors cursor-pointer">
+                    <span
+                      key={tag}
+                      onClick={() => handleTagClick(tag)}
+                      className="px-3 py-1 bg-news-silver/20 text-news-steel text-sm rounded-full hover:bg-news-navy hover:text-white transition-colors cursor-pointer"
+                    >
                       {tag}
                     </span>
                   ))}
@@ -259,7 +286,7 @@ export default function Home() {
               <h6 className="font-semibold text-news-charcoal headline-serif mb-4">Contribute</h6>
               <ul className="space-y-2 text-sm text-news-steel">
                 <li><Link href="/submit" className="hover:text-news-navy transition-colors">Submit Article</Link></li>
-                <li><button className="hover:text-news-navy transition-colors text-left">Domain Review</button></li>
+                <li><button onClick={() => setIsDomainModalOpen(true)} className="hover:text-news-navy transition-colors text-left">Domain Review</button></li>
                 <li><Link href="/guidelines" className="hover:text-news-navy transition-colors">Editorial Standards</Link></li>
               </ul>
             </div>
@@ -288,6 +315,12 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Domain Review Modal */}
+      <DomainReviewModal
+        isOpen={isDomainModalOpen}
+        onClose={() => setIsDomainModalOpen(false)}
+      />
     </div>
   );
 }
