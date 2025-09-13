@@ -128,7 +128,9 @@ cd ops
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [contributing guide](CONTRIBUTING.md) for details on:
+We welcome contributions! Every contributor can participate completely anonymously - no real name required, no email verification, and no git commit signing needed. Use pseudonymous usernames or pseudonymous email addresses if you prefer to remain anonymous.
+
+Please see our [contributing guide](CONTRIBUTING.md) for details on:
 
 - Development setup and workflow
 - Code standards and best practices

@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to Tales of Charlie! This document provides guidelines and information for contributors.
 
+**Contributing can be completely anonymous** - no real name, email verification, or formal commit attribution required. Git commit signing is not needed for contributions. Use pseudonymous usernames and/or pseudonymous email addresses if you prefer to remain anonymous.
+
 ## 🙏 Code of Conduct
 
 This project follows a strict code of conduct. All contributors must agree to our [Contributor License Agreement (CLA)](CLA.md) which grants the project owner broad rights to use and distribute contributions.
