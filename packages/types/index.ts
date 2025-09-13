@@ -47,6 +47,16 @@ export const CreatePostInputSchema = z.object({
 
 export type CreatePostInput = z.infer<typeof CreatePostInputSchema>;
 
+// Get Posts Input Schema - for query parameters
+export const GetPostsInputSchema = z.object({
+  page: z.string().regex(/^\d+$/).transform(Number).optional().default(1),
+  limit: z.string().regex(/^\d+$/).transform(Number).optional().default(20),
+  sort: z.enum(['recent', 'popular', 'stars']).optional().default('recent'),
+  tag: z.string().optional(),
+});
+
+export type GetPostsInput = z.infer<typeof GetPostsInputSchema>;
+
 // Normalize and validate URL - this is a utility function
 export function normalizeUrl(url: string): string {
   try {

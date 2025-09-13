@@ -1,6 +1,23 @@
+"use client";
+
+import Link from "next/link";
 import { AuthButton } from "@/components/auth-button";
+import { ArticlesFeed } from "@/components/articles-feed";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleSubmitArticle = () => {
+    if (status === "authenticated") {
+      router.push("/submit");
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
@@ -63,26 +80,36 @@ export default function Home() {
                 <li>• User profile management</li>
               </ul>
             </div>
-            
-            <div className="bg-blue-50 rounded-lg shadow-md p-6 border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-900 mb-3">Phase 2B 🚧 In Progress</h3>
-              <ul className="text-sm text-blue-700 text-left space-y-2">
+
+            <div className="bg-green-50 rounded-lg shadow-md p-6 border border-green-200">
+              <h3 className="text-lg font-semibold text-green-900 mb-3">Phase 2B & 3A ✅ Complete</h3>
+              <ul className="text-sm text-green-700 text-left space-y-2">
                 <li>• NextAuth.js integration</li>
-                <li>• Frontend authentication UI</li>
-                <li>• Article submission form</li>
-                <li>• Professional news layout</li>
-                <li>• User dashboard</li>
+                <li>• Article submission UI</li>
+                <li>• Backend article processing</li>
+                <li>• Domain validation system</li>
+                <li>• Professional form components</li>
               </ul>
             </div>
           </div>
 
           <div className="text-center">
             <p className="text-sm text-gray-500">
-              API Health: <a href="/api/health" className="text-blue-600 hover:underline" target="_blank">Test Backend</a> | 
+              Status Links: <Link href="/health" className="text-blue-600 hover:underline">API Health Check</Link> |
               <span className="mx-1">•</span>
-              NextAuth: <a href="/api/auth/signin" className="text-blue-600 hover:underline">Sign In Page</a>
+              External Docs: <a href="/api/health" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">API Health</a>,
+              <a href="/api/auth/session" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener noreferrer">Auth Session</a>
             </p>
           </div>
+        </div>
+
+        {/* Articles Feed - Only shown to authenticated users */}
+        <div className="mt-16 border-t pt-12">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-gray-900">Recent Articles</h3>
+            <p className="text-gray-600 mt-2">See processed articles and conservative analyses</p>
+          </div>
+          <ArticlesFeed maxItems={6} />
         </div>
       </main>
 

@@ -18,9 +18,9 @@ export function Providers({ children }: ProvidersProps) {
             // With SSR, we usually want to set some default staleTime
             // above 0 to avoid refetching immediately on the client
             staleTime: 60 * 1000, // 1 minute
-            retry: (failureCount: number, error: any) => {
+            retry: (failureCount: number, error: Error) => {
               // Don't retry for auth errors
-              if (error?.response?.status === 401) {
+              if (error.message === 'Unauthorized') {
                 return false
               }
               return failureCount < 3

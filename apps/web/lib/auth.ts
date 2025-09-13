@@ -14,8 +14,7 @@ const authConfig: NextAuthConfig = {
     error: "/auth/error",
   },
   callbacks: {
-    async signIn(params: any) {
-      const { user, account, profile } = params
+    async signIn({ user, account }) {
       if (account?.provider === "google") {
         // Verify with our API that this user is allowed
         try {
@@ -47,25 +46,23 @@ const authConfig: NextAuthConfig = {
       }
       return true
     },
-    async jwt(params: any) {
-      const { token, user, account } = params
+    async jwt({ token, user }) {
       // Store user info in JWT token
       if (user) {
-        token.id = (user as any).id
-        token.username = (user as any).username
-        token.email = user.email
-        token.image = user.image
+        ;(token as any).id = (user as any).id
+        ;(token as any).username = (user as any).username
+        ;(token as any).email = user.email
+        ;(token as any).image = user.image
       }
       return token
     },
-    async session(params: any) {
-      const { session, token } = params
+    async session({ session, token }) {
       // Send properties to the client
       if (token) {
-        ;(session.user as any).id = token.id as string
-        ;(session.user as any).username = token.username as string
-        ;(session.user as any).email = token.email as string
-        ;(session.user as any).image = token.image as string
+        ;(session.user as any).id = (token as any).id
+        ;(session.user as any).username = (token as any).username
+        ;(session.user as any).email = (token as any).email
+        ;(session.user as any).image = (token as any).image
       }
       return session
     },
