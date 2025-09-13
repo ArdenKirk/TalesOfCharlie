@@ -1,9 +1,12 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**"] },
     "dev": { "cache": false },
     "lint": {},
-    "test": {}
+    "test": {},
+    "test:run": {},
+    "typecheck": { "dependsOn": ["^build"], "cache": false },
+    "compile-check": { "cache": false }
   }
 }

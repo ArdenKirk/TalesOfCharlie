@@ -1,6 +1,24 @@
 {
   "name": "@toc/config",
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
   "private": true,
-  "main": "index.ts"
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "zod": "^4.1.8",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "typescript": "^5.7.3"
+  },
+  "files": [
+    "dist"
+  ]
 }

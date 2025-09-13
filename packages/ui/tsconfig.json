@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "types": []
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["dist", "node_modules", "**/*profile*", "**/*spec*", "**/*config*"],
+  "ts-node": {
+    "esm": true
+  }
+}

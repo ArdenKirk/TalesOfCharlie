@@ -6,3 +6,5 @@ dist
 .env*
 ops/backups
 .pnpm-store
+ops/.turbo
+.turbo

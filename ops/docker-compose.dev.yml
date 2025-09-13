@@ -8,6 +8,9 @@ x-env: &common-env
   AUTH_EMAIL_SERVER: smtp://mailhog:1025
   AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@localhost>"
   AI_MODE: mock
+  GOOGLE_CLIENT_ID: dev-google-client-id-placeholder
+  GOOGLE_CLIENT_SECRET: dev-google-client-secret-placeholder
+  GOOGLE_CALLBACK_URL: http://localhost/api/auth/google/callback
 
 services:
   postgres:

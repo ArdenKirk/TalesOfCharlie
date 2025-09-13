@@ -1,6 +1,24 @@
 {
   "name": "@toc/ai-mocks",
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "AI mock responses for development",
+  "main": "index.ts",
   "private": true,
-  "main": "index.ts"
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.7",
+    "typescript": "^5.7.3"
+  },
+  "files": [
+    "dist"
+  ]
 }
