@@ -8,3 +8,5 @@ ops/backups
 .pnpm-store
 ops/.turbo
 .turbo
+apps/web/.turbo
+apps/worker/.turbo
