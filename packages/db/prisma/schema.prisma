@@ -8,29 +8,39 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  emailVerified  DateTime?
-  googleId       String?
-  username       String   @unique
-  avatarUrl      String?
-  createdAt      DateTime @default(now())
-  posts          Post[]
-  stars          Star[]
+  id            String   @id @default(cuid())
+  email         String   @unique
+  emailVerified DateTime?
+  googleId      String?
+  username      String   @unique
+  avatarUrl     String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  posts Post[]   @relation("UserPosts")
+  stars Star[]
 }
 
 model Post {
-  id                      String   @id @default(cuid())
-  url                     String   @unique
-  domain                  String
-  headlineExact           String
-  ledeExact               String
-  summaryConservativeMd   String
-  tags                    String[]
-  status                  PostStatus @default(PUBLISHED)
-  createdAt               DateTime @default(now())
-  createdBy               String
-  starCountCached         Int       @default(0)
+  id                    String     @id @default(cuid())
+  url                   String     @unique
+  domain                String
+  headlineExact         String
+  ledeExact             String
+  summaryConservativeMd String
+  tags                  String[]
+  status                PostStatus @default(PUBLISHED)
+  createdAt             DateTime   @default(now())
+
+  // Author relation (opposite of User.posts)
+  createdByUserId String
+  createdByUser   User       @relation("UserPosts", fields: [createdByUserId], references: [id])
+
+  // Stars relation (opposite of Star.post)
+  stars           Star[]
+
+  starCountCached Int        @default(0)
+
   @@index([domain])
 }
 
@@ -42,35 +52,46 @@ enum PostStatus {
 
 model Star {
   id        String   @id @default(cuid())
-  userId    String
-  postId    String
+
+  // User side
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Post side
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
+
   createdAt DateTime @default(now())
+
   @@unique([userId, postId])
+  @@index([postId])
+  @@index([userId])
 }
 
 model WhitelistDomain {
-  domain   String   @id
-  addedAt  DateTime @default(now())
-  addedBy  String?
+  domain  String   @id
+  addedAt DateTime @default(now())
+  addedBy String?
 }
 
 model BlacklistDomain {
-  domain   String   @id
-  reason   String?
-  addedAt  DateTime @default(now())
-  addedBy  String?
+  domain  String   @id
+  reason  String?
+  addedAt DateTime @default(now())
+  addedBy String?
 }
 
 model DomainReview {
-  id                         String   @id @default(cuid())
-  domain                     String
-  status                     ReviewStatus @default(PENDING)
-  monthlyVisitorsReported    Int?
-  evidenceUrl                String?
-  legitimacyAssessment       String?
-  decidedBy                  String?
-  decidedAt                  DateTime?
-  createdAt                  DateTime @default(now())
+  id                      String        @id @default(cuid())
+  domain                  String
+  status                  ReviewStatus  @default(PENDING)
+  monthlyVisitorsReported Int?
+  evidenceUrl             String?
+  legitimacyAssessment    String?
+  decidedBy               String?
+  decidedAt               DateTime?
+  createdAt               DateTime      @default(now())
+
   @@index([domain])
 }
 
