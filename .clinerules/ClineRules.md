@@ -47,7 +47,7 @@ list_code_definition_names("apps/api/src")
 
 ### Memory Bank Integration (MANDATORY)
 
-* **Always read** all Memory Bank files at task start (see MemoryBank.md).
+* Read Memory Bank files when relevant. If you need multiple, read them all at once using one command, not one file at a time.
 * **Immediately update** Memory Bank after shipping meaningful changes.
 * Use `activeContext.md` to focus work and record current constraints/decisions.
 * Record new patterns in `systemPatterns.md`.
