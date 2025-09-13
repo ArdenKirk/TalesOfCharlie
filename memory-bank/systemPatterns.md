@@ -142,20 +142,27 @@ const ProtectedArticlePage = withAuth(ArticlePage)
 interface ArticleSubmissionJob {
   url: string
   userId: string
+  postId: string
 }
 
 // Worker processor
 export async function processSubmission(job: Job<ArticleSubmissionJob>) {
-  const { url, userId } = job.data
+  const { url, userId, postId } = job.data
 
-  // Idempotent processing with URL hash
-  const hash = hashUrl(url)
-  const existing = await db.post.findUnique({ where: { url } })
+  // Content extraction and AI evaluation
+  const extractedData = await extractFromUrl(url)
 
-  if (existing) return existing
+  // Domain validation
+  const domain = extractDomain(url)
+  const domainStatus = await checkDomainStatus(domain)
 
-  // Process article...
-  return processArticle(url, userId)
+  // AI evaluation (mock or real)
+  const aiDecision = process.env.AI_MODE === 'real'
+    ? await llmService.evaluateArticle(url, extractedData)
+    : getMockAiDecision(url, extractedData)
+
+  // Publish or deny based on AI decision
+  await publishArticle(postId, extractedData, aiDecision)
 }
 ```
 

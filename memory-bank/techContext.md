@@ -34,7 +34,8 @@
 - **HTML Safety**: sanitize-html for content sanitization
 - **HTTP Client**: Undici for fast, secure requests
 - **Domain Parsing**: tldts for reliable domain extraction
-- **AI Integration**: LiteLLM proxy (production) with rate limiting and caching
+- **AI Integration**: LiteLLM proxy (production) with Redis caching ($5/day budget)
+- **Development AI**: ai-mocks package with domain detection and Response Picker workflow
 
 ### Development & Operations
 - **Package Manager**: pnpm 10.16.0 with workspaces
