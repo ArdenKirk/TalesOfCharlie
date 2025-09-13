@@ -13,6 +13,6 @@ pnpm lint
 
 # Run the test suite
 echo "🧪 Running tests..."
-pnpm test
+pnpm test:run
 
 echo "✅ All checks passed! Safe to push."
