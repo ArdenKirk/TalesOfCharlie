@@ -6,11 +6,15 @@ x-env: &common-env
   NEXTAUTH_URL: https://talesofcharlie.com
   NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
   AUTH_EMAIL_SERVER: ${AUTH_EMAIL_SERVER}
-  AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@talesofcharlie.com}"
+  AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@talesofcharlie.com>"
   AI_MODE: real
   LLM_PROVIDER: openai
   OPENAI_API_KEY: ${OPENAI_API_KEY}
   MAX_DAILY_COST_USD: "5"
+  # LiteLLM Configuration
+  LITELLM_BASE_URL: http://litellm:8080/v1
+  LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+  LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
 
 services:
   postgres:
@@ -67,13 +71,36 @@ services:
       - redis
     restart: unless-stopped
 
-  # (Optional) LiteLLM proxy container can be added here when you wire prod LLM.
-  # litellm:
-  #   image: ghcr.io/berriai/litellm:latest
-  #   environment:
-  #     OPENAI_API_KEY: ${OPENAI_API_KEY}
-  #   expose: ["8080"]
-  #   restart: unless-stopped
+  litellm:
+    image: ghcr.io/berriai/litellm:latest
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      DATABASE_URL: ${LITELLM_DATABASE_URL:-}
+      STORE_MODEL_IN_DB: "True"
+      # Budget and rate limiting
+      MAX_BUDGET: ${MAX_DAILY_COST_USD:-5}
+      BUDGET_DURATION: "1d"
+      # Logging
+      LITELLM_LOG: "INFO"
+      # Cache
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "8080", "--host", "0.0.0.0"]
+    expose: ["8080"]
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   caddy:
     image: caddy:2

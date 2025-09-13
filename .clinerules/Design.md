@@ -217,11 +217,12 @@ wal-g/ (optional later)
     - Tag selection from the hard-coded allowlist.
 
 ### Control & Safety
-- **Budget guard**: start with MAX_DAILY_COST_USD=$5 (adjustable). Track tokens in/out and per-day spend; switch to fallback if exceeded.
+- **Budget guard**: start with MAX_DAILY_COST_USD=$5 (adjustable). Track tokens in/out and per-day spend; **FAIL PROCESSING** when budget exceeded - never auto-approve or auto-deny.
 - **Caching**: cache outputs by (url_norm, model, prompt_version) for 30–90 days.
 - **Timeouts**: e.g., 15s per call; 2 retries on 429/5xx with backoff.
-- **Kill switch**: LLM_ENABLED=false flips to rule-based short fallback without redeploy.
+- **Kill switch**: LLM_ENABLED=false causes processing to fail - no fallback decisions.
 - **Prompt versioning**: prompts stored in versioned files; version included in cache keys; rollbackable.
+- **🚨 CRITICAL RULE**: Never auto-approve or auto-deny articles when AI processing fails for ANY reason (budget exceeded, API errors, configuration issues). Always fail the entire processing pipeline and return clear error messages to users.
 
 ## 8) Security & Compliance
 

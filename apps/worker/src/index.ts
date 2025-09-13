@@ -3,6 +3,7 @@ import pino from 'pino';
 import { PrismaClient } from '@toc/db';
 import { fromUrlExtract } from './lib/extract';
 import { getMockChoices } from '@toc/ai-mocks';
+import { llmService } from './lib/llm';
 
 const log = pino({ name: 'worker' });
 const connection = { url: process.env.REDIS_URL || 'redis://localhost:6379' };
@@ -31,28 +32,56 @@ const worker = new Worker('article-processing', async (job) => {
 
     log.info({ postId, headline: extractedData.headline }, 'content extracted successfully');
 
-    // Step 2: In development mode, use AI mock system
+    // Step 2: AI Processing - Mock in development, Real LiteLLM in production
     const isProd = process.env.NODE_ENV === 'production';
     const aiMode = process.env.AI_MODE || 'mock';
 
     let aiResult: { decision: 'APPROVE' | 'DENY'; summaryMd: string; tags: string[] };
 
     if (aiMode === 'mock' && !isProd) {
-      // Use mock system - normally this would show a UI for developer selection
+      // Use mock system for development
       log.info({ postId }, 'using AI mock system');
       const mockChoices = getMockChoices(url);
 
-      // For now, auto-select the first mock choice (APPROVE)
-      // TODO: Implement Response Picker UI for developer choice
+      // Auto-select first choice for now - TODO: Implement Response Picker UI
       aiResult = mockChoices[0];
+    } else if (aiMode === 'real' && isProd) {
+      // Use real LiteLLM service in production
+      log.info({ postId }, 'using LiteLLM service for real AI processing');
+      
+      try {
+        // Prepare data for AI evaluation
+        const bodyAfterLede = extractedData.rest || '';
+
+        const aiDecision = await llmService.evaluateArticle(url, {
+          headline: extractedData.headline,
+          lede: extractedData.lede || '',
+          bodyAfterLede
+        });
+
+        aiResult = {
+          decision: aiDecision.decision,
+          summaryMd: aiDecision.summaryMd,
+          tags: aiDecision.tags
+        };
+        
+        log.info({ 
+          postId, 
+          decision: aiResult.decision, 
+          tagsCount: aiResult.tags.length 
+        }, 'LiteLLM evaluation completed');
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        log.error({ postId, error: errorMessage }, 'LiteLLM evaluation failed');
+        
+        // Never fallback to approve/deny - always fail when AI doesn't work
+        throw new Error(`AI Processing Failed: ${errorMessage}`);
+      }
     } else {
-      // TODO: Implement real AI processing via LiteLLM
-      // For now, default to approval
-      aiResult = {
-        decision: 'APPROVE',
-        summaryMd: '**Conservative analysis pending** - AI integration in development',
-        tags: ['politics', 'media-bias']
-      };
+      // Fallback mode (shouldn't normally happen)
+      log.error({ postId, aiMode, isProd }, 'Unexpected AI mode configuration - failing processing');
+      throw new Error('AI_CONFIG_ERROR: AI mode not properly configured. Article processing failed.');
     }
 
     log.info({ postId, decision: aiResult.decision }, 'AI processing completed');

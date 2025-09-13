@@ -1,13 +1,21 @@
 'use client';
 
 import { Post } from '@toc/types';
+import { StarButton } from './star-button';
 import Link from 'next/link';
 
 interface ArticleCardProps {
   article: Post;
+  onStarChange?: (articleId: string, starred: boolean, starCount: number) => void;
 }
 
-export function ArticleCard({ article }: ArticleCardProps) {
+export function ArticleCard({ article, onStarChange }: ArticleCardProps) {
+  const handleStarChange = (starred: boolean, starCount: number) => {
+    if (onStarChange) {
+      onStarChange(article.id, starred, starCount);
+    }
+  };
+
   return (
     <article className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
       <div className="mb-4">
@@ -69,10 +77,11 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-2 text-gray-500">
-            <span>🦆</span>
-            <span>{article.starCountCached} stars</span>
-          </div>
+          <StarButton
+            postId={article.id}
+            initialStarCount={article.starCountCached}
+            onStarChange={handleStarChange}
+          />
 
           <div className="text-gray-400 text-xs">
             ID: {article.id.slice(0, 8)}...
