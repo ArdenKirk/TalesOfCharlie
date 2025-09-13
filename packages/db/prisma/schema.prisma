@@ -100,3 +100,13 @@ enum ReviewStatus {
   APPROVED
   DENIED
 }
+
+model MagicLink {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   // hashed token
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
