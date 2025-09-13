@@ -61,21 +61,12 @@ This document outlines all available Model Context Protocol (MCP) servers integr
 - `git_diff_unstaged`: View unstaged changes
 - `git_diff_staged`: View staged changes
 - `git_diff`: Compare branches or commits
-- `git_commit`: Record changes
-- `git_add`: Stage files
-- `git_reset`: Unstage changes
 - `git_log`: View commit history
-- `git_create_branch`: Create new branches
-- `git_checkout`: Switch branches
 - `git_show`: Display commit details
-- `git_init`: Initialize repositories
 - `git_branch`: List branches
 - And more Git operations...
 
 **Use Cases**:
-- All Git version control operations
-- Repository management and branch handling
-- Commit management and history analysis
 - Tracking changes and modifications
 - Version control workflow maintenance
 
