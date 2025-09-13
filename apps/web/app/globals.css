@@ -3,24 +3,74 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* News Site Color System - Deep Navy like Wall Street Journal */
+  --color-news-navy: #1a365d;
+  --color-news-charcoal: #2d3748;
+  --color-news-steel: #4a5568;
+  --color-news-concrete: #718096;
+  --color-news-silver: #a0aec0;
+
+  /* Conservative Red - Like political branding */
+  --color-conservative-red: #7b341e;
+  --color-conservative-warm: #c53030;
+
+  /* Professional accents */
+  --color-accent: #2b6cb0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-source-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom news colors */
+  --color-news-navy: var(--color-news-navy);
+  --color-news-charcoal: var(--color-news-charcoal);
+  --color-news-steel: var(--color-news-steel);
+  --color-news-concrete: var(--color-news-concrete);
+  --color-news-silver: var(--color-news-silver);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a202c;
+    --foreground: #f7fafc;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), serif;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* News Typography System */
+.headline-serif {
+  font-family: var(--font-serif), serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.body-sans {
+  font-family: var(--font-sans), sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.masthead-text {
+  font-family: var(--font-serif), serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.byline-text {
+  font-family: var(--font-sans), sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }

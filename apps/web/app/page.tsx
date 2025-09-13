@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AuthButton } from "@/components/auth-button";
 import { ArticlesFeed } from "@/components/articles-feed";
+import { SortControls } from "@/components/sort-controls";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -19,113 +20,270 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="w-full border-b bg-white/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-white">
+      {/* Masthead Header */}
+      <header className="w-full border-b border-news-steel bg-white/95 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">TC</span>
+            {/* Logo & Title */}
+            <div className="flex items-center space-x-4">
+              <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                <div className="w-12 h-12 bg-news-navy rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xl masthead-text">TC</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-news-charcoal masthead-text">Tales of Charlie</h1>
+                  <p className="text-xs text-news-steel byline-text uppercase tracking-wide">A Tribute to Charlie Kirk</p>
+                </div>
+              </Link>
+            </div>
+
+            {/* Navigation */}
+            <nav className="hidden lg:flex items-center space-x-8 text-sm">
+              <a href="#latest" className="text-news-charcoal hover:text-news-navy font-medium transition-colors">Latest</a>
+              <a href="#popular" className="text-news-charcoal hover:text-news-navy font-medium transition-colors">Popular</a>
+              <a href="#conservative" className="text-news-charcoal hover:text-news-navy font-medium transition-colors">Conservative Analysis</a>
+              <a href="#community" className="text-news-charcoal hover:text-news-navy font-medium transition-colors">Community</a>
+            </nav>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search articles..."
+                    className="w-48 px-3 py-1.5 text-sm border border-news-silver rounded-md focus:outline-none focus:ring-2 focus:ring-news-navy focus:border-transparent"
+                  />
+                  <svg className="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-news-concrete" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Tales of Charlie</h1>
-                <p className="text-sm text-gray-600">A tribute to Charlie Kirk</p>
+              <AuthButton />
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Navigation Bar */}
+        <div className="border-t border-news-silver">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-6">
+                <span className="text-conservative-red font-medium uppercase tracking-wide">Breaking Conservative Analysis</span>
+                <span className="text-news-silver">•</span>
+                <span className="text-news-concrete">Headline: Liberal Media Bias Continues</span>
+              </div>
+              <div className="text-news-concrete">
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
               </div>
             </div>
-            <AuthButton />
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h2 className="text-4xl font-bold text-gray-900 sm:text-6xl mb-6">
-            Exposing Media Bias Against
-            <span className="text-blue-600 block">Conservatives</span>
-          </h2>
-          
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Professional news aggregation that documents corruption and bias in liberal media. 
-            We copy headlines exactly, then provide conservative perspective summaries.
-          </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Hero Section - Newspaper Front Page Style */}
+        <section className="py-12 border-b border-news-silver">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Story */}
+            <div className="lg:col-span-2 pr-8">
+              <div className="mb-6">
+                <span className="inline-block px-3 py-1 bg-conservative-red text-white text-sm font-medium uppercase tracking-wide rounded-sm">
+                  Featured
+                </span>
+              </div>
+              <h2 className="text-4xl lg:text-6xl font-bold text-news-charcoal headline-serif leading-tight mb-4">
+                Liberal Media Bias: A Growing Crisis for American Journalism
+              </h2>
+              <p className="text-lg text-news-steel body-sans leading-relaxed mb-6 max-w-2xl">
+                Documents and analysis of how mainstream media systematically undervalues conservative perspectives,
+                continuing a pattern that threatens the very foundation of journalistic balance.
+              </p>
+              <div className="flex items-center space-x-4 text-sm text-news-concrete">
+                <span className="byline-text font-medium">by Conservative Editorial Board</span>
+                <span>•</span>
+                <time>Today at 9:00 AM</time>
+                <span>•</span>
+                <span>12 min read</span>
+              </div>
+            </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Authentication System Status</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>API Backend Running</span>
+            {/* Side Stories */}
+            <div className="space-y-6">
+              <div className="border-b border-news-silver pb-4">
+                <span className="inline-block px-2 py-1 bg-news-navy text-white text-xs font-medium uppercase tracking-wide rounded-sm mb-2">
+                  Analysis
+                </span>
+                <h3 className="text-xl font-semibold text-news-charcoal headline-serif mb-2">
+                  Election Coverage Failures
+                </h3>
+                <p className="text-sm text-news-steel body-sans leading-snug">
+                  How mainstream outlets missed key voter concerns in recent elections.
+                </p>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>JWT Authentication</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Google OAuth Ready</span>
+              <div className="border-b border-news-silver pb-4">
+                <span className="inline-block px-2 py-1 bg-conservative-red text-white text-xs font-medium uppercase tracking-wide rounded-sm mb-2">
+                  Community
+                </span>
+                <h3 className="text-xl font-semibold text-news-charcoal headline-serif mb-2">
+                  Submit Your Story
+                </h3>
+                <p className="text-sm text-news-steel body-sans leading-snug mb-3">
+                  Help document media bias by submitting articles for conservative analysis.
+                </p>
+                {status === "authenticated" ? (
+                  <button
+                    onClick={() => router.push('/submit')}
+                    className="bg-news-navy text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-news-charcoal transition-colors"
+                  >
+                    Submit Article
+                  </button>
+                ) : (
+                  <p className="text-xs text-news-concrete">
+                    <Link href="/auth/signin" className="text-news-navy hover:underline">Sign in</Link> to submit content
+                  </p>
+                )}
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Phase 2A ✅ Complete</h3>
-              <ul className="text-sm text-gray-600 text-left space-y-2">
-                <li>• Authentication API endpoints</li>
-                <li>• JWT token management</li>
-                <li>• Google OAuth integration</li>
-                <li>• Magic link email auth</li>
-                <li>• User profile management</li>
-              </ul>
+        {/* Main Content Grid - Three Columns like Newspaper */}
+        <section className="py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Main Column */}
+            <div className="lg:col-span-8">
+              <div className="mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                  <div>
+                    <h3 className="text-3xl font-bold text-news-charcoal headline-serif mb-2">Latest Stories</h3>
+                    <p className="text-news-steel body-sans">
+                      Conservative perspectives on today's most important news
+                    </p>
+                  </div>
+                  
+                  {/* Sort Controls */}
+                  <div className="mt-4 sm:mt-0">
+                    <SortControls />
+                  </div>
+                </div>
+              </div>
+              <ArticlesFeed maxItems={8} />
             </div>
 
-            <div className="bg-green-50 rounded-lg shadow-md p-6 border border-green-200">
-              <h3 className="text-lg font-semibold text-green-900 mb-3">Phase 2B & 3A ✅ Complete</h3>
-              <ul className="text-sm text-green-700 text-left space-y-2">
-                <li>• NextAuth.js integration</li>
-                <li>• Article submission UI</li>
-                <li>• Backend article processing</li>
-                <li>• Domain validation system</li>
-                <li>• Professional form components</li>
-              </ul>
+            {/* Right Sidebar */}
+            <div className="lg:col-span-4">
+              {/* Popular Stories */}
+              <div className="bg-news-silver/10 rounded-lg p-6 mb-8">
+                <h4 className="text-lg font-bold text-news-charcoal headline-serif mb-4">Most Starred</h4>
+                <div className="space-y-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-start space-x-3 pb-3 border-b border-news-silver/30 last:border-0">
+                      <div className="w-8 h-8 bg-news-navy rounded-sm flex items-center justify-center text-white text-xs font-bold">
+                        {i}
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="text-sm font-medium text-news-charcoal leading-tight mb-1">
+                          Placeholder article title that is quite long
+                        </h5>
+                        <p className="text-xs text-news-concrete">
+                          by username • 2.1k stars
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags Cloud */}
+              <div className="bg-white border border-news-silver rounded-lg p-6 mb-8">
+                <h4 className="text-lg font-bold text-news-charcoal headline-serif mb-4">Explore by Topic</h4>
+                <div className="flex flex-wrap gap-2">
+                  {["Media Bias", "Election Fraud", "Cultural Issues", "Conservative Victory", "Liberal Hypocrisy", "Political Corruption", "Free Speech", "边к Values"].map((tag) => (
+                    <span key={tag} className="px-3 py-1 bg-news-silver/20 text-news-steel text-sm rounded-full hover:bg-news-navy hover:text-white transition-colors cursor-pointer">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="bg-conservative-red rounded-lg p-6 text-center text-white">
+                <h4 className="text-lg font-bold mb-2 headline-serif">Join Our Mission</h4>
+                <p className="text-sm mb-4 opacity-90 body-sans">
+                  Help expose media bias through conservative analysis
+                </p>
+                <button
+                  onClick={() => router.push(status === "authenticated" ? "/submit" : "/")}
+                  className="bg-white text-conservative-red px-6 py-2 rounded-sm font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Contribute Now
+                </button>
+              </div>
             </div>
           </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-500">
-              Status Links: <Link href="/health" className="text-blue-600 hover:underline">API Health Check</Link> |
-              <span className="mx-1">•</span>
-              External Docs: <a href="/api/health" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">API Health</a>,
-              <a href="/api/auth/session" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener noreferrer">Auth Session</a>
-            </p>
-          </div>
-        </div>
-
-        {/* Articles Feed - Only shown to authenticated users */}
-        <div className="mt-16 border-t pt-12">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900">Recent Articles</h3>
-            <p className="text-gray-600 mt-2">See processed articles and conservative analyses</p>
-          </div>
-          <ArticlesFeed maxItems={6} />
-        </div>
+        </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-white/80 backdrop-blur-sm mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              This project is a tribute to Charlie Kirk and serves to expose media bias against conservatives.
-            </p>
-            <div className="mt-4 flex justify-center space-x-6 text-sm text-gray-500">
-              <span>Professional News Aggregation</span>
-              <span>•</span>
-              <span>Conservative Commentary</span>
-              <span>•</span>
-              <span>Open Source</span>
+      <footer className="border-t border-news-silver bg-news-silver/10 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h5 className="font-bold text-news-charcoal headline-serif mb-4">Tales of Charlie</h5>
+              <p className="text-sm text-news-steel body-sans mb-4">
+                A tribute to Charlie Kirk exposing media bias against conservatives through professional news aggregation.
+              </p>
+              <div className="flex space-x-4">
+                <span className="text-news-concrete">📖</span>
+                <span className="text-news-concrete">🐦</span>
+                <span className="text-news-concrete">💻</span>
+              </div>
+            </div>
+            <div>
+              <h6 className="font-semibold text-news-charcoal headline-serif mb-4">Navigation</h6>
+              <ul className="space-y-2 text-sm text-news-steel">
+                <li><Link href="/" className="hover:text-news-navy transition-colors">Latest Stories</Link></li>
+                <li><Link href="/popular" className="hover:text-news-navy transition-colors">Popular</Link></li>
+                <li><Link href="/tags" className="hover:text-news-navy transition-colors">Tags</Link></li>
+                <li><Link href="/about" className="hover:text-news-navy transition-colors">About</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h6 className="font-semibold text-news-charcoal headline-serif mb-4">Contribute</h6>
+              <ul className="space-y-2 text-sm text-news-steel">
+                <li><Link href="/submit" className="hover:text-news-navy transition-colors">Submit Article</Link></li>
+                <li><button className="hover:text-news-navy transition-colors text-left">Domain Review</button></li>
+                <li><Link href="/guidelines" className="hover:text-news-navy transition-colors">Editorial Standards</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h6 className="font-semibold text-news-charcoal headline-serif mb-4">Community</h6>
+              <ul className="space-y-2 text-sm text-news-steel">
+                <li><Link href="/open-source" className="hover:text-news-navy transition-colors">Open Source</Link></li>
+                <li><Link href="/contact" className="hover:text-news-navy transition-colors">Contact</Link></li>
+                <li><Link href="/contribute" className="hover:text-news-navy transition-colors">Join Us</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-news-silver pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-sm text-news-concrete">
+                © 2025 Tales of Charlie. A tribute to Charlie Kirk.
+              </p>
+              <div className="flex items-center space-x-6 text-sm text-news-concrete mt-4 md:mt-0">
+                <span>Professional News Aggregation</span>
+                <span>•</span>
+                <span>Conservative Analysis</span>
+                <span>•</span>
+                <span>Open Source</span>
+              </div>
             </div>
           </div>
         </div>
