@@ -57,14 +57,14 @@ jobs:
 
       - name: Setup test database
         run: |
-          export DATABASE_URL='postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/toc_test'
+          export DATABASE_URL='postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/toc_test'
           cd packages/db
           pnpm prisma migrate deploy
 
       - name: Unit tests
         run: pnpm test:unit
         env:
-          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/toc_test
+          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/toc_test
           REDIS_URL: redis://localhost:6379
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -73,7 +73,7 @@ jobs:
       - name: Integration tests
         run: pnpm test:integration
         env:
-          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/toc_test
+          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/toc_test
           REDIS_URL: redis://localhost:6379
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
