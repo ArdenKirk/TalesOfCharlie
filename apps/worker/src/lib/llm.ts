@@ -45,7 +45,7 @@ export class LiteLLMService {
     this.config = {
       apiKey: process.env.LITELLM_MASTER_KEY || process.env.OPENAI_API_KEY || '',
       baseUrl: process.env.LITELLM_BASE_URL || 'http://litellm:8080/v1',
-      model: process.env.LLM_MODEL || 'gpt-4o-mini',
+      model: process.env.LLM_MODEL || 'gpt-5',
       maxTokens: 1500,
       temperature: 0.3,
       ...config
@@ -99,13 +99,13 @@ export class LiteLLMService {
   }
 
   private estimateCost(usage: { promptTokens: number; completionTokens: number; totalTokens: number }): number {
-    // GPT-4o-mini pricing (approximate)
-    const inputCostPer1K = 0.00015;  // $0.150 per 1M tokens
-    const outputCostPer1K = 0.0006;  // $0.600 per 1M tokens
-    
+    // GPT-5 pricing (standard model)
+    const inputCostPer1K = 0.00125;  // $1.25 per 1M tokens
+    const outputCostPer1K = 0.01;    // $10 per 1M tokens
+
     const inputCost = (usage.promptTokens / 1000) * inputCostPer1K;
     const outputCost = (usage.completionTokens / 1000) * outputCostPer1K;
-    
+
     return inputCost + outputCost;
   }
 

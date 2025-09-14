@@ -6,7 +6,7 @@ x-public: &public
   AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@talesofcharlie.com>"
   AI_MODE: real
   LLM_PROVIDER: openai
-  LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+  LLM_MODEL: ${LLM_MODEL:-gpt-5}
   MAX_DAILY_COST_USD: "5"
   REDIS_URL: redis://redis:6379
   LITELLM_BASE_URL: http://litellm:8080/v1
@@ -29,8 +29,6 @@ x-secret: &secret
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   POSTGRES_USER: ${POSTGRES_USER:-postgres}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-  GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
   LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
   LITELLM_DATABASE_URL: ${LITELLM_DATABASE_URL:-}
 
