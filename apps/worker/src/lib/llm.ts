@@ -225,7 +225,7 @@ EVALUATION CRITERIA:
 
 If APPROVED, provide:
 1) Conservative summary in Markdown (2-3 paragraphs, extremely conservative perspective)
-2) Up to 20 tags from this allowlist: politics, media-bias, conservative-review, culture-war, traditional-values, religion, economics, government-overreach, individual-liberty, progressivism, liberal-bias, mainstream-media, propaganda, media-watch, academic-freedom, free-speech, progressive-agenda, education, conservative-news, reliable-source, traditional-media, ideological-analysis, mixed-content, progressive-bias
+2) Up to 20 tags from this allowlist: politics, media-bias, conservative-review, culture-war, traditional-values, religion, economics, government-overreach, individual-liberty, progressivism, liberal-bias, mainstream-media, propaganda, media-watch, academic-freedom, free-speech, progressive-agenda, education, conservative-news, reliable-source, traditional-media, ideological-analysis, mixed-content, progressive-bias, global-warming, climate-change, green-energy, environmentalism, antiwhiteism, antiwhite-rhetoric, racial-studies, black-crime, crime-statistics, ethnic-replacement, jewish-control, cultural-marxism, deep-state, elite-corruption, mainstream-propaganda, communism, socialism, democratic-socialism, wealth-redistribution, economic-freedom, assassination, political-assassination, regime-change, false-flags, election-integrity, voter-fraud, border-security, illegal-immigration, cancel-culture, woke-ideology, gender-ideology, parental-rights, critical-race-theory, gun-rights, vaccine-policy, corporate-censorship, free-speech-suppression, religious-persecution, school-choice, judicial-activism, america-first, big-tech, housing-crisis, family-breakdown, college-indoctrination, identity-politics, islamic-extremism, china-communist, russian-influence, food-crisis, real-estate-manipulation, big-farmer
 
 Be uncompromising in conservative analysis while maintaining professional tone.`;
 
@@ -308,14 +308,14 @@ Evaluate this article and provide your decision with reasoning.`;
 
 Write 2-3 paragraphs from an uncompromisingly conservative perspective, highlighting:
 - Traditional values under attack
-- Government overreach concerns  
+- Government overreach concerns
 - Media bias and propaganda
 - Economic freedom vs progressive control
 - Cultural and religious freedom issues
 
 Use professional news tone while maintaining strong conservative viewpoint.
 
-Assign up to 20 relevant tags from the allowlist: politics, media-bias, conservative-review, culture-war, traditional-values, religion, economics, government-overreach, individual-liberty, progressivism, liberal-bias, mainstream-media, propaganda, media-watch, academic-freedom, free-speech, progressive-agenda, education, conservative-news, reliable-source, traditional-media, ideological-analysis, mixed-content, progressive-bias`;
+Assign up to 20 relevant tags from the allowlist: politics, media-bias, conservative-review, culture-war, traditional-values, religion, economics, government-overreach, individual-liberty, progressivism, liberal-bias, mainstream-media, propaganda, media-watch, academic-freedom, free-speech, progressive-agenda, education, conservative-news, reliable-source, traditional-media, ideological-analysis, mixed-content, progressive-bias, global-warming, climate-change, green-energy, environmentalism, antiwhiteism, antiwhite-rhetoric, racial-studies, black-crime, crime-statistics, ethnic-replacement, jewish-control, cultural-marxism, deep-state, elite-corruption, mainstream-propaganda, communism, socialism, democratic-socialism, wealth-redistribution, economic-freedom, assassination, political-assassination, regime-change, false-flags, election-integrity, voter-fraud, border-security, illegal-immigration, cancel-culture, woke-ideology, gender-ideology, parental-rights, critical-race-theory, gun-rights, vaccine-policy, corporate-censorship, free-speech-suppression, religious-persecution, school-choice, judicial-activism, america-first, big-tech, housing-crisis, family-breakdown, college-indoctrination, identity-politics, islamic-extremism, china-communist, russian-influence, food-crisis, real-estate-manipulation, big-farmer`;
 
     const userPrompt = `Generate conservative summary for:
 

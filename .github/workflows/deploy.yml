@@ -1,0 +1,207 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: toc_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Setup test database
+        run: |
+          export DATABASE_URL="postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/toc_test"
+          cd packages/db
+          pnpm prisma migrate deploy
+
+      - name: Unit tests
+        run: pnpm test:unit
+        env:
+          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/toc_test
+          REDIS_URL: redis://localhost:6379
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          AI_MODE: mock
+
+      - name: Integration tests
+        run: pnpm test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/toc_test
+          REDIS_URL: redis://localhost:6379
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          AI_MODE: mock
+
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Extract metadata for images
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/talesofcharlie
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-web
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push api image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-api
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/worker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-worker
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to DigitalOcean
+    runs-on: ubuntu-latest
+    needs: ci
+    environment: production
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DO_SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create .env.prod file
+        run: |
+          cat > ops/.env.prod << EOF
+          # Database
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+
+          # NextAuth
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+
+          # JWT
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+          # Email
+          AUTH_EMAIL_SERVER=${{ secrets.AUTH_EMAIL_SERVER }}
+
+          # OAuth
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+          # AI/LLM
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          LITELLM_MASTER_KEY=${{ secrets.LITELLM_MASTER_KEY }}
+          LITELLM_SALT_KEY=${{ secrets.LITELLM_SALT_KEY }}
+          LITELLM_DATABASE_URL=${{ secrets.LITELLM_DATABASE_URL }}
+
+          # Admin
+          ADMIN_PASSWORD_HASH=${{ secrets.ADMIN_PASSWORD_HASH }}
+          EOF
+
+      - name: Upload .env.prod to VM
+        run: |
+          scp -o StrictHostKeyChecking=no ops/.env.prod root@${{ secrets.DO_SSH_HOST }}:/root/.env.prod
+
+      - name: Deploy to production
+        run: |
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.DO_SSH_HOST }} << 'EOF'
+            set -e
+
+            # Move env file to ops directory
+            mv /root/.env.prod /root/ops/.env.prod
+
+            # Navigate to ops and deploy
+            cd /root/ops
+            ./prod.sh up
+
+            echo "✅ Deployment completed successfully"
+          EOF
+
+      - name: Health check
+        run: |
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.DO_SSH_HOST }} << 'EOF'
+            set -e
+
+            # Wait a moment for services to start
+            sleep 10
+
+            # Check API health
+            curl -f -s https://talesofcharlie.com/api/health > /dev/null
+
+            echo "✅ Health check passed"
+          EOF
