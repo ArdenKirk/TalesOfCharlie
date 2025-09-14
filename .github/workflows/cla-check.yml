@@ -36,14 +36,14 @@ jobs:
           BASE_REF="${{ github.base_ref }}"
           if [ -z "$BASE_REF" ]; then
             # Fallback: compare to origin/main if base_ref missing
-            BASE_REF="origin/${GITHUB_BASE_REF:-main}"
+            BASE_REF="main"
           fi
 
           # Ensure base is fetched
           git fetch origin "$BASE_REF" || true
 
           # Examine commits in the PR range for the trailer line
-          if git log --format=%B "${BASE_REF}..HEAD" | grep -Eiq '^CLA-Agreement:\s*I agree to .*CLA v?1\.0'; then
+          if git log --format=%B "origin/$BASE_REF..HEAD" | grep -Eiq '^CLA-Agreement:\s*I agree to .*CLA v?1\.0'; then
             echo "trailers_ok=true" >> $GITHUB_OUTPUT
           else
             echo "trailers_ok=false" >> $GITHUB_OUTPUT
