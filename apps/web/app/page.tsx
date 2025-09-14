@@ -76,16 +76,14 @@ export default function Home() {
       <header className="w-full border-b border-news-steel bg-white/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
-            {/* Logo & Title */}
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                <div className="w-12 h-12 bg-news-navy rounded-sm flex items-center justify-center">
-                  <span className="text-white font-bold text-xl masthead-text">TC</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-news-charcoal masthead-text">Tales of Charlie</h1>
-                  <p className="text-xs text-news-steel byline-text uppercase tracking-wide">A Tribute to Charlie Kirk</p>
-                </div>
+            {/* Logo */}
+            <div className="flex items-center">
+              <Link href="/" className="hover:opacity-80 transition-opacity">
+                <img
+                  src="/logo.png"
+                  alt="Tales of Charlie"
+                  className="h-12 w-auto"
+                />
               </Link>
             </div>
 

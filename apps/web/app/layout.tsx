@@ -23,6 +23,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tales of Charlie",
   description: "A tribute to Charlie Kirk - Exposing media bias against conservatives",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

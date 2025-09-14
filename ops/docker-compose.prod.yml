@@ -1,17 +1,24 @@
 x-env: &common-env
-  DATABASE_URL: ${DATABASE_URL}
-  REDIS_URL: ${REDIS_URL}
+  # -------- Public / commit-safe --------
   NEXTAUTH_URL: https://talesofcharlie.com
-  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-  AUTH_EMAIL_SERVER: ${AUTH_EMAIL_SERVER}
+  NEXT_PUBLIC_API_BASE: https://talesofcharlie.com/api
   AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@talesofcharlie.com>"
   AI_MODE: real
   LLM_PROVIDER: openai
-  OPENAI_API_KEY: ${OPENAI_API_KEY}
-  MAX_DAILY_COST_USD: "5"
-  # LiteLLM Configuration
-  LITELLM_BASE_URL: http://litellm:8080/v1
   LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+  MAX_DAILY_COST_USD: "5"
+  REDIS_URL: redis://redis:6379
+  # LiteLLM internal endpoint (service name + exposed port)
+  LITELLM_BASE_URL: http://litellm:8080/v1
+
+  # -------- Secrets (injected from .env.prod) --------
+  DATABASE_URL: ${DATABASE_URL}
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+  JWT_SECRET: ${JWT_SECRET}
+  AUTH_EMAIL_SERVER: ${AUTH_EMAIL_SERVER}
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
 
 services:
@@ -19,7 +26,7 @@ services:
     image: postgres:16
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: toc
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -45,8 +52,10 @@ services:
       target: prod
     environment:
       <<: *common-env
-      NEXT_PUBLIC_API_BASE: https://talesofcharlie.com/api
-    expose: ["3000"]
+    depends_on:
+      - api
+    expose:
+      - "3000"
     restart: unless-stopped
 
   api:
@@ -54,8 +63,14 @@ services:
       context: ..
       dockerfile: ./apps/api/Dockerfile
       target: prod
-    environment: *common-env
-    expose: ["4000"]
+    environment:
+      <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+      - litellm
+    expose:
+      - "4000"
     restart: unless-stopped
 
   worker:
@@ -93,18 +108,18 @@ services:
     expose: ["8080"]
     depends_on:
       - redis
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
 
   caddy:
     image: caddy:2
     ports: ["80:80","443:443"]
     volumes:
-      - ./Caddyfile.dev.prod:/etc/caddy/Caddyfile.dev:ro
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

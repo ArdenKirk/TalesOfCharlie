@@ -1,2 +1,2 @@
 add x min read to articles, based on word count.
-Add finding a user's top 3 most stared tags, saving this info to their user profile in the database. recalculate on every star. Show them articles of these types on their home page.
+Add finding a user's top 3 most stared tags, saving this info to their user profile in the database. recalculate on every star. Show them articles of these types on their home page. Still put the most popular article by the day large at the top
