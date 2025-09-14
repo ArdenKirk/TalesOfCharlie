@@ -1,5 +1,6 @@
-x-env: &common-env
-  # -------- Public / commit-safe --------
+version: "3.9"
+
+x-public: &public
   NEXTAUTH_URL: https://talesofcharlie.com
   NEXT_PUBLIC_API_BASE: https://talesofcharlie.com/api
   AUTH_EMAIL_FROM: "Tales of Charlie <no-reply@talesofcharlie.com>"
@@ -8,10 +9,16 @@ x-env: &common-env
   LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
   MAX_DAILY_COST_USD: "5"
   REDIS_URL: redis://redis:6379
-  # LiteLLM internal endpoint (service name + exposed port)
   LITELLM_BASE_URL: http://litellm:8080/v1
+  POSTGRES_DB: toc
+  STORE_MODEL_IN_DB: "True"
+  MAX_BUDGET: ${MAX_DAILY_COST_USD:-5}
+  BUDGET_DURATION: "1d"
+  LITELLM_LOG: "INFO"
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
 
-  # -------- Secrets (injected from .env.prod) --------
+x-secret: &secret
   DATABASE_URL: ${DATABASE_URL}
   NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
   JWT_SECRET: ${JWT_SECRET}
@@ -20,14 +27,21 @@ x-env: &common-env
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+  POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+  LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+  LITELLM_DATABASE_URL: ${LITELLM_DATABASE_URL:-}
+
+x-env: &common-env
+  <<: *public
+  <<: *secret
 
 services:
   postgres:
     image: postgres:16
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: toc
+    environment: *common-env
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups
@@ -86,22 +100,7 @@ services:
 
   litellm:
     image: ghcr.io/berriai/litellm:latest
-    environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
-      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
-      DATABASE_URL: ${LITELLM_DATABASE_URL:-}
-      STORE_MODEL_IN_DB: "True"
-      # Budget and rate limiting
-      MAX_BUDGET: ${MAX_DAILY_COST_USD:-5}
-      BUDGET_DURATION: "1d"
-      # Logging
-      LITELLM_LOG: "INFO"
-      # Cache
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+    environment: *common-env
     volumes:
       - ./litellm-config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml", "--port", "8080", "--host", "0.0.0.0"]
