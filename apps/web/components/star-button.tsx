@@ -58,12 +58,27 @@ export function StarButton({
           onStarChange(newIsStarred, newStarCount);
         }
       } else {
-        console.error('Failed to toggle star');
-        // Could show an error message here
+        const errorText = await response.text();
+        console.error('Failed to toggle star:', response.status, errorText);
+
+        // Handle specific auth errors
+        if (response.status === 404 && errorText.includes('User not found')) {
+          // User in session doesn't exist - suggest re-login
+          alert('Your session appears to be outdated. Please sign in again.');
+          // Could trigger sign out here if needed
+        } else {
+          alert('Failed to star article. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error toggling star:', error);
-      // Could show an error message here
+
+      // Handle "User not found" Auth.js error
+      if (error?.toString().includes('User not found')) {
+        alert('Your session appears to be outdated. Please sign in again.');
+      } else {
+        alert('Network error. Please check your connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }

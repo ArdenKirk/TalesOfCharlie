@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Head from 'next/head';
 
 interface DomainReview {
   id: string;
@@ -37,8 +38,11 @@ export default function DomainManagement() {
   const [reviews, setReviews] = useState<DomainReview[]>([]);
   const [whitelist, setWhitelist] = useState<WhitelistedDomain[]>([]);
   const [blacklist, setBlacklist] = useState<BlacklistedDomain[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
 
   // Redirect if not authenticated
   if (status === 'loading') {
@@ -52,10 +56,9 @@ export default function DomainManagement() {
     return null;
   }
 
-  // Check if user is admin (simplified - in production, check roles)
-  const isAdmin = session?.user?.email?.includes('admin') || process.env.NODE_ENV === 'development';
-
-  if (!isAdmin) {
+  // Check if user has correct email
+  const hasCorrectEmail = session?.user?.email === 'arden@talesofcharlie.com';
+  if (!hasCorrectEmail) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
@@ -67,6 +70,129 @@ export default function DomainManagement() {
     </div>;
   }
 
+  // Password verification form (only shown before verification)
+  if (!isVerified) {
+    const handleVerifyPassword = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setLoading(true);
+      setError('');
+
+      try {
+        const response = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAdminToken(data.adminToken);
+          setIsVerified(true);
+          setPassword('');
+        } else {
+          const errorData = await response.json();
+          setError(errorData.message || 'Invalid credentials');
+        }
+      } catch (err) {
+        setError('Network error - please try again');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleDevLogin = async () => {
+      if (process.env.NODE_ENV !== 'development') return;
+
+      setLoading(true);
+      setError('');
+
+      try {
+        const response = await fetch('/api/admin/dev-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAdminToken(data.adminToken);
+          setIsVerified(true);
+        } else {
+          setError('Development login failed');
+        }
+      } catch (err) {
+        setError('Network error - please try again');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <>
+        <Head>
+          <meta name="robots" content="noindex, nofollow" />
+        </Head>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md w-full space-y-8">
+            <div>
+              <div className="w-12 h-12 bg-blue-600 rounded-sm flex items-center justify-center mx-auto mb-4">
+                <span className="text-white font-bold text-xl">TC</span>
+              </div>
+              <h2 className="text-center text-3xl font-extrabold text-gray-900">
+                Admin Access Required
+              </h2>
+              <p className="mt-2 text-center text-sm text-gray-600">
+                Enter your admin password to continue
+              </p>
+            </div>
+            <form className="mt-8 space-y-6" onSubmit={handleVerifyPassword}>
+              <div>
+                <label htmlFor="password" className="sr-only">Password</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Enter admin password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-md bg-red-50 p-4">
+                  <div className="text-sm text-red-700">{error}</div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Verifying...' : 'Access Admin Panel'}
+                </button>
+
+                {process.env.NODE_ENV === 'development' && (
+                  <button
+                    type="button"
+                    onClick={handleDevLogin}
+                    disabled={loading}
+                    className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Development Login (No Password)
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   useEffect(() => {
     loadData();
   }, []);
@@ -76,8 +202,16 @@ export default function DomainManagement() {
       setLoading(true);
       setError('');
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+
+      if (adminToken) {
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      }
+
       const [reviewsRes, whitelistRes, blacklistRes] = await Promise.all([
-        fetch('/api/domains/reviews'),
+        fetch('/api/domains/reviews', { headers }),
         fetch('/api/domains/whitelist'),
         fetch('/api/domains/blacklist')
       ]);
@@ -105,9 +239,17 @@ export default function DomainManagement() {
 
   const handleDecision = async (reviewId: string, decision: 'APPROVE' | 'DENY', reason?: string) => {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+
+      if (adminToken) {
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      }
+
       const response = await fetch(`/api/domains/reviews/${reviewId}/decide`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ decision, reason })
       });
 

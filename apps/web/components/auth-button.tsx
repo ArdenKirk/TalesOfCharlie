@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useState } from "react";
 
 export function AuthButton() {
-  const { data: session, status } = useSession()
+  const { data: session, status } = useSession();
+  const [showMenu, setShowMenu] = useState(false);
 
   if (status === "loading") {
     return (

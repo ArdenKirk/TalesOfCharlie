@@ -59,6 +59,14 @@ This document is the single source of truth for product requirements, technical 
     - **Why**: Agent-friendly contracts and runtime validation. (Zod schemas are the single source; OpenAPI generated from Zod.)
 - **Auth**: Auth.js/NextAuth (Google OAuth + Email magic links)
     - **Why**: Battle-tested, integrates cleanly with Next.js; API verifies JWTs.
+- **Admin Access Control**:
+    - **Environment Variable**: `ADMIN_PASSWORD_HASH` (server-side, injected via GitHub secrets in production)
+    - **Access Requirements**: Exact email match `arden@talesofcharlie.com` AND correct password (verified via bcryptjs)
+    - **Page Protection**: Admin page starts blank with password form; reveals content only after verification
+    - **Development Mode**: "Development Login (No Password)" button grants full admin rights locally
+    - **SEO Protection**: `robots: noindex, nofollow` meta tags to exclude admin pages from search engines
+    - **Generic Error Messages**: All authentication events return "Invalid credentials" to prevent user enumeration attacks
+    - **Session Management**: JWT admin tokens with 24-hour expiry
 - **Logging**: pino
 - **Observability**: OpenTelemetry (traces, metrics) — spans across web → api → worker → LLM.
 
@@ -233,6 +241,7 @@ wal-g/ (optional later)
 ### API Security
 - Zod validation at boundaries; sanitize inputs; SSRF protections for fetcher.
 - JWT validation; CSRF protections for stateful forms.
+- **Generic Error Messages**: All authentication events return "Invalid credentials" to prevent user enumeration attacks.
 
 ### Rate Limiting
 - Redis-backed limits (global, per-IP, per-user) for login, submit, star, and filter routes.

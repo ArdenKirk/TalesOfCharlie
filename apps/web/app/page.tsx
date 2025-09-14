@@ -1,19 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { AuthButton } from "@/components/auth-button";
 import { ArticlesFeed } from "@/components/articles-feed";
 import { SortControls } from "@/components/sort-controls";
 import { DomainReviewModal } from "@/components/domain-review-modal";
+import { StarButton } from "@/components/star-button";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Post } from "@toc/types";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
+  const [featuredArticle, setFeaturedArticle] = useState<Post | null>(null);
+  const [popularArticles, setPopularArticles] = useState<Post[]>([]);
 
   const handleSubmitArticle = () => {
     if (status === "authenticated") {
@@ -33,6 +37,38 @@ export default function Home() {
   const handleTagClick = (tag: string) => {
     router.push(`/tag/${encodeURIComponent(tag.toLowerCase())}`);
   };
+
+  // Fetch featured article (most recent)
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const response = await fetch('/api/posts?limit=1');
+        const data = await response.json();
+        if (data.success && data.data.data.length > 0) {
+          setFeaturedArticle(data.data.data[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching featured article:', error);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
+  // Fetch popular articles for sidebar
+  useEffect(() => {
+    const fetchPopular = async () => {
+      try {
+        const response = await fetch('/api/posts/popular/week?limit=5');
+        const data = await response.json();
+        if (data.success && data.data.data) {
+          setPopularArticles(data.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching popular articles:', error);
+      }
+    };
+    fetchPopular();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -84,31 +120,38 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Secondary Navigation Bar */}
+            {/* Secondary Navigation Bar */}
         <div className="border-t border-news-silver">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center space-x-6">
                 <span className="text-conservative-red font-medium uppercase tracking-wide">Breaking Conservative Analysis</span>
                 <span className="text-news-silver">•</span>
-                <span className="text-news-concrete">Headline: Liberal Media Bias Continues</span>
+                <span className="text-news-concrete">
+                  {featuredArticle
+                    ? `${featuredArticle.headlineExact.substring(0, 60)}${featuredArticle.headlineExact.length > 60 ? '...' : ''}`
+                    : 'Latest Conservative Analysis'
+                  }
+                </span>
               </div>
-              <div className="text-news-concrete">
-                {new Date().toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+              <div suppressHydrationWarning className="text-news-concrete">
+                {typeof window === 'undefined' ? 'Loading...' :
+                  new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                }
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* Hero Section - Newspaper Front Page Style */}
-        <section className="py-12 border-b border-news-silver">
+        <section className="max-w-screen-xl mx-auto py-12 border-b border-news-silver">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Story */}
             <div className="lg:col-span-2 pr-8">
@@ -117,20 +160,55 @@ export default function Home() {
                   Featured
                 </span>
               </div>
-              <h2 className="text-4xl lg:text-6xl font-bold text-news-charcoal headline-serif leading-tight mb-4">
-                Liberal Media Bias: A Growing Crisis for American Journalism
-              </h2>
-              <p className="text-lg text-news-steel body-sans leading-relaxed mb-6 max-w-2xl">
-                Documents and analysis of how mainstream media systematically undervalues conservative perspectives,
-                continuing a pattern that threatens the very foundation of journalistic balance.
-              </p>
-              <div className="flex items-center space-x-4 text-sm text-news-concrete">
-                <span className="byline-text font-medium">by Conservative Editorial Board</span>
-                <span>•</span>
-                <time>Today at 9:00 AM</time>
-                <span>•</span>
-                <span>12 min read</span>
-              </div>
+              {featuredArticle ? (
+                <>
+                  <h2 className="text-4xl lg:text-6xl font-bold text-news-charcoal headline-serif leading-tight mb-4 cursor-pointer hover:text-news-navy transition-colors">
+                    <Link href={`/article/${featuredArticle.id}`}>
+                      {featuredArticle.headlineExact}
+                    </Link>
+                  </h2>
+                  <p className="text-lg text-news-steel body-sans leading-relaxed mb-6 max-w-2xl">
+                    {featuredArticle.ledeExact}
+                  </p>
+                  <div className="flex items-center space-x-4 text-sm text-news-concrete">
+                    <span className="byline-text font-medium">by {featuredArticle.createdByUser.username}</span>
+                    <span>•</span>
+                    <span className="px-2 py-1 bg-news-silver/30 text-news-steel rounded-sm text-xs font-medium byline-text uppercase tracking-wide">
+                      {featuredArticle.domain}
+                    </span>
+                    <span>•</span>
+                    <time dateTime={new Date(featuredArticle.createdAt).toISOString()} className="byline-text">
+                      {new Date(featuredArticle.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </time>
+                  </div>
+                  <div className="mt-4 flex items-center space-x-4">
+                    <Link
+                      href={`/article/${featuredArticle.id}`}
+                      className="inline-flex items-center text-sm text-news-navy hover:text-conservative-red font-medium transition-colors"
+                    >
+                      Read Full Analysis →
+                    </Link>
+                    <StarButton
+                      postId={featuredArticle.id}
+                      initialStarCount={featuredArticle.starCountCached}
+                      onStarChange={() => {}} // No-op since this is just display
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-4xl lg:text-6xl font-bold text-news-charcoal headline-serif leading-tight mb-4">
+                    Loading Featured Article...
+                  </h2>
+                  <p className="text-lg text-news-steel body-sans leading-relaxed mb-6 max-w-2xl">
+                    Fetching the latest conservative analysis for you.
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Side Stories */}
@@ -174,10 +252,10 @@ export default function Home() {
         </section>
 
         {/* Main Content Grid - Three Columns like Newspaper */}
-        <section className="py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <section className="max-w-screen-xl mx-auto py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12">
             {/* Main Column */}
-            <div className="lg:col-span-8">
+            <div className="lg:col-span-8 xl:col-span-8">
               <div className="mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                   <div>
@@ -204,23 +282,37 @@ export default function Home() {
             <div className="lg:col-span-4">
               {/* Popular Stories */}
               <div className="bg-news-silver/10 rounded-lg p-6 mb-8">
-                <h4 className="text-lg font-bold text-news-charcoal headline-serif mb-4">Most Starred</h4>
+                <h4 className="text-lg font-bold text-news-charcoal headline-serif mb-4">Most Popular</h4>
                 <div className="space-y-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="flex items-start space-x-3 pb-3 border-b border-news-silver/30 last:border-0">
+                  {popularArticles.length > 0 ? popularArticles.slice(0, 4).map((article, index) => (
+                    <div key={article.id} className="flex items-start space-x-3 pb-3 border-b border-news-silver/30 last:border-0">
                       <div className="w-8 h-8 bg-news-navy rounded-sm flex items-center justify-center text-white text-xs font-bold">
-                        {i}
+                        {index + 1}
                       </div>
                       <div className="flex-1">
-                        <h5 className="text-sm font-medium text-news-charcoal leading-tight mb-1">
-                          Placeholder article title that is quite long
-                        </h5>
+                        <Link href={`/article/${article.id}`}>
+                          <h5 className="text-sm font-medium text-news-charcoal leading-tight mb-1 hover:text-news-navy transition-colors cursor-pointer">
+                            {article.headlineExact.substring(0, 50)}{article.headlineExact.length > 50 ? '...' : ''}
+                          </h5>
+                        </Link>
                         <p className="text-xs text-news-concrete">
-                          by username • 2.1k stars
+                          by {article.createdByUser.username} • {article.starCountCached} stars
                         </p>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    [1, 2, 3, 4].map((i) => (
+                      <div key={i} className="flex items-start space-x-3 pb-3 border-b border-news-silver/30 last:border-0">
+                        <div className="w-8 h-8 bg-news-navy rounded-sm flex items-center justify-center text-white text-xs font-bold">
+                          {i}
+                        </div>
+                        <div className="flex-1 animate-pulse">
+                          <div className="h-4 bg-news-silver/30 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-news-silver/20 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

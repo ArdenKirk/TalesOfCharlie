@@ -65,9 +65,7 @@ export function ArticlesFeed({ maxItems = 8 }: ArticlesFeedProps) {
     }
   };
 
-  if (!session) {
-    return null;
-  }
+  // Articles are now visible to all users for better discovery
 
   if (loading) {
     return (
